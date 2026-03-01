@@ -64,7 +64,7 @@ body {
   padding: 0.5rem 0.75rem;
   font-size: 1rem;
   background: #ffffff;
-  border: 1px solid #dddddd;
+  border: none;
   border-radius: 4px;
   color: #333333;
 }
@@ -103,26 +103,62 @@ body {
 .separator {
   border: none;
   border-top: 1px solid #dddddd;
-  margin: 2.25rem 0 1rem 0;
-  width: 95vw;
+  margin: 2.25rem auto 2rem auto;
+  width: 100vw;
+  max-width: 1400px;
   position: relative;
   left: 50%;
   transform: translateX(-50%);
+  box-sizing: border-box;
+}
+
+.results-container {
+  width: 100vw;
+  max-width: 1400px;
+  margin-left: calc(50% - min(50vw, 700px));
+  box-sizing: border-box;
+  padding-inline: 1.5rem;
+  font-family: Verdana, sans-serif;
+}
+
+.results-count {
+  margin: -1rem -1.5rem 1rem 0;
+  text-align: right;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #79523c;
 }
 
 .results {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  width: 100%;
+  font-family: Verdana, sans-serif;
 }
 
-.results li {
-  padding: 0.75rem;
-  border-bottom: 1px solid #dddddd;
+.results > li {
+  min-width: 0;
+  padding: 1.75rem 2rem;
+  margin: 0.2rem;
+  background-color: #e8d9c0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-.results li:last-child {
-  border-bottom: none;
+.results > li > a,
+.results > li > .professor-name-plain {
+  font-size: 1.6rem;
+  font-weight: bold;
+  display: inline-block;
+  margin-bottom: 0.35rem;
+}
+
+.results > li > .professor-name-plain {
+  color: #79523c;
 }
 
 .results a {
@@ -140,10 +176,20 @@ body {
   margin-top: 0.25rem;
 }
 
+.research-areas-heading {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.95rem;
+}
+
 .openalex {
   margin-top: 0.5rem;
   font-size: 0.9rem;
   color: #5b5b5b;
+}
+
+.openalex strong {
+  font-size: 0.95rem;
 }
 
 .openalex ul {
@@ -157,7 +203,11 @@ body {
 }
 
 .openalex a {
-  color: #79523c;
+  color: #8f6b52;
+}
+
+.no-publications-msg {
+  margin-top: 0.25rem;
 }
 
 .message {

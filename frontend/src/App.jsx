@@ -93,20 +93,33 @@ export default function App() {
           <p className="message">No faculty found.</p>
         )}
         {results.length > 0 && (
-          <ul className="results">
+          <div className="results-container">
+            <p className="results-count">
+              {results.length} {results.length === 1 ? "result" : "results"} found
+            </p>
+            <ul className="results">
             {results.map((f) => (
               <li key={f.profileUrl}>
-                <a
-                  href={f.profileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {f.name}
-                </a>
+                {f.website ? (
+                  <a
+                    href={f.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {f.name}
+                  </a>
+                ) : (
+                  <span className="professor-name-plain">{f.name}</span>
+                )}
                 <div className="research">
-                  {f.researchAreas && <div>{f.researchAreas}</div>}
+                  {f.researchAreas && (
+                    <>
+                      <strong className="research-areas-heading">Research areas</strong>
+                      <div>{f.researchAreas}</div>
+                    </>
+                  )}
                   <div className="openalex">
-                    <strong>Recent publications (OpenAlex)</strong>
+                    <strong>Recent publications</strong>
                     {f.papers?.length > 0 ? (
                       <ul>
                         {f.papers.slice(0, 5).map((p, i) => (
@@ -124,13 +137,14 @@ export default function App() {
                         ))}
                       </ul>
                     ) : (
-                      <span> No publication data available.</span>
+                      <div className="no-publications-msg">No publication data available.</div>
                     )}
                   </div>
                 </div>
               </li>
             ))}
-          </ul>
+            </ul>
+          </div>
         )}
       </main>
     </>
