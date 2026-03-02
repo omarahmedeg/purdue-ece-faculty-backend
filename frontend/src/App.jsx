@@ -15,19 +15,20 @@ export default function App() {
     setHasSearched(true);
     setLoading(true);
     setError(null);
+    const API_BASE = "https://purdue-ece-faculty-directory.onrender.com";
     try {
       const extensiveEndpoint =
         searchType === "name"
-          ? `/api/faculty/search/extensive/name?query=${encodeURIComponent(
-              query
+          ? `${API_BASE}/api/faculty/search/extensive/name?query=${encodeURIComponent(
+              query,
             )}`
-          : `/api/faculty/search/extensive/research?query=${encodeURIComponent(
-              query
+          : `${API_BASE}/api/faculty/search/extensive/research?query=${encodeURIComponent(
+              query,
             )}`;
       const basicEndpoint =
         searchType === "name"
-          ? `/api/faculty/search/name?query=${encodeURIComponent(query)}`
-          : `/api/faculty/search/research?query=${encodeURIComponent(query)}`;
+          ? `${API_BASE}/api/faculty/search/name?query=${encodeURIComponent(query)}`
+          : `${API_BASE}/api/faculty/search/research?query=${encodeURIComponent(query)}`;
 
       let res = await fetch(extensiveEndpoint);
       let data = await res.json();
@@ -46,9 +47,7 @@ export default function App() {
       setResults(data.results || []);
       if (data.scholarReady) setError(null);
     } catch (err) {
-      setError(
-        "Could not reach the server. Is the backend running on port 3001?"
-      );
+      setError("Could not reach the server. Please try again later.");
       setResults([]);
     } finally {
       setLoading(false);
@@ -58,7 +57,11 @@ export default function App() {
   return (
     <>
       <header className="app-header">
-        <img src={bannerImage} alt="Purdue University" className="banner-image" />
+        <img
+          src={bannerImage}
+          alt="Purdue University"
+          className="banner-image"
+        />
       </header>
       <main className="app-main">
         <h1>Purdue ECE Faculty Directory</h1>
@@ -97,54 +100,59 @@ export default function App() {
         {results.length > 0 && (
           <div className="results-container">
             <p className="results-count">
-              {results.length} {results.length === 1 ? "result" : "results"} found
+              {results.length} {results.length === 1 ? "result" : "results"}{" "}
+              found
             </p>
             <ul className="results">
-            {results.map((f) => (
-              <li key={f.profileUrl}>
-                {f.website ? (
-                  <a
-                    href={f.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {f.name}
-                  </a>
-                ) : (
-                  <span className="professor-name-plain">{f.name}</span>
-                )}
-                <div className="research">
-                  {f.researchAreas && (
-                    <>
-                      <strong className="research-areas-heading">Research areas</strong>
-                      <div>{f.researchAreas}</div>
-                    </>
+              {results.map((f) => (
+                <li key={f.profileUrl}>
+                  {f.website ? (
+                    <a
+                      href={f.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {f.name}
+                    </a>
+                  ) : (
+                    <span className="professor-name-plain">{f.name}</span>
                   )}
-                  <div className="openalex">
-                    <strong>Recent publications</strong>
-                    {f.papers?.length > 0 ? (
-                      <ul>
-                        {f.papers.slice(0, 5).map((p, i) => (
-                          <li key={i}>
-                            <a
-                              href={p.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {p.title}
-                            </a>
-                            {p.year && ` (${p.year})`}
-                            {p.citedBy > 0 && ` — ${p.citedBy} citations`}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="no-publications-msg">No publication data available.</div>
+                  <div className="research">
+                    {f.researchAreas && (
+                      <>
+                        <strong className="research-areas-heading">
+                          Research areas
+                        </strong>
+                        <div>{f.researchAreas}</div>
+                      </>
                     )}
+                    <div className="openalex">
+                      <strong>Recent publications</strong>
+                      {f.papers?.length > 0 ? (
+                        <ul>
+                          {f.papers.slice(0, 5).map((p, i) => (
+                            <li key={i}>
+                              <a
+                                href={p.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {p.title}
+                              </a>
+                              {p.year && ` (${p.year})`}
+                              {p.citedBy > 0 && ` — ${p.citedBy} citations`}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="no-publications-msg">
+                          No publication data available.
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              ))}
             </ul>
           </div>
         )}
