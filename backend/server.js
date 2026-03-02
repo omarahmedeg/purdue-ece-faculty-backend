@@ -10,39 +10,70 @@ import {
   extensiveSearchByName,
   extensiveSearchByResearchArea,
 } from "./scholar.js";
+import { readCache, writeCache } from "./dataStore.js";
 
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
 
+// ── In-memory state (loaded from cache at startup) ──────────────────────────
 let facultyData = [];
 let scholarData = {};
 let lastScraped = null;
 let scholarReady = false;
+let refreshInProgress = false;
 
-async function initializeData() {
-  console.log("Initializing faculty data...");
-  try {
-    facultyData = await scrapeFacultyData();
-    lastScraped = new Date();
-    console.log(`Successfully scraped ${facultyData.length} faculty members`);
-
-    console.log("Starting scholar data fetch in background...");
-    fetchAllScholarData(facultyData)
-      .then((data) => {
-        scholarData = data;
-        scholarReady = true;
-        console.log("Scholar data ready!");
-      })
-      .catch((error) => {
-        console.error("Error fetching scholar data:", error);
-      });
-  } catch (error) {
-    console.error("Error initializing data:", error);
-  }
+/**
+ * Load the persisted cache into memory.
+ * If the cache already has scholar data, mark it ready immediately.
+ */
+function loadFromCache() {
+  const cache = readCache();
+  facultyData = cache.facultyData;
+  scholarData = cache.scholarData;
+  lastScraped = cache.lastScraped;
+  scholarReady = Object.keys(scholarData).length > 0 && facultyData.length > 0;
+  console.log(
+    `Cache loaded: ${facultyData.length} faculty, scholarReady=${scholarReady}`,
+  );
 }
+
+/**
+ * Full scrape + scholar fetch, then persist to cache.
+ * Returns once faculty scraping is done; scholar fetch continues in the
+ * background and writes the cache again when complete.
+ */
+async function runScrapeAndCache() {
+  console.log("Scraping faculty data...");
+  facultyData = await scrapeFacultyData();
+  lastScraped = new Date().toISOString();
+  scholarReady = false;
+
+  // Persist basic faculty data immediately so it's available right away
+  writeCache({ facultyData, scholarData, lastScraped });
+  console.log(
+    `Scraped ${facultyData.length} faculty members. Fetching scholar data in background...`,
+  );
+
+  // Fetch scholar data in the background
+  fetchAllScholarData(facultyData)
+    .then((data) => {
+      scholarData = data;
+      scholarReady = true;
+      writeCache({ facultyData, scholarData, lastScraped });
+      console.log("Scholar data ready and cache updated!");
+    })
+    .catch((err) => {
+      console.error("Error fetching scholar data:", err);
+    })
+    .finally(() => {
+      refreshInProgress = false;
+    });
+}
+
+// ── Routes ───────────────────────────────────────────────────────────────────
 
 app.get("/api/faculty/search/name", (req, res) => {
   const { query } = req.query;
@@ -88,31 +119,84 @@ app.get("/api/faculty/search/extensive/research", (req, res) => {
   res.json({ results, count: results.length, scholarReady: true });
 });
 
-app.get("/api/faculty/refresh", async (req, res) => {
-  try {
-    facultyData = await scrapeFacultyData();
-    lastScraped = new Date();
-    scholarReady = false;
-    fetchAllScholarData(facultyData)
-      .then((data) => {
-        scholarData = data;
-        scholarReady = true;
-        console.log("Scholar data refreshed!");
-      })
-      .catch((error) => {
-        console.error("Error refreshing scholar data:", error);
-      });
-    res.json({
-      message: "Data refreshed. Scholar data refreshing in background.",
-      count: facultyData.length,
-      lastScraped,
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to refresh data" });
-  }
+/**
+ * GET /api/faculty/status
+ * Returns the current state of the in-memory data.
+ */
+app.get("/api/faculty/status", (req, res) => {
+  res.json({
+    facultyCount: facultyData.length,
+    scholarReady,
+    lastScraped,
+    refreshInProgress,
+  });
 });
 
-app.listen(PORT, async () => {
+/**
+ * POST /api/faculty/refresh
+ * Triggers a full re-scrape, updates the cache, and returns immediately.
+ * Poll GET /api/faculty/status to check for completion.
+ */
+app.post("/api/faculty/refresh", (req, res) => {
+  if (refreshInProgress) {
+    return res
+      .status(409)
+      .json({
+        message: "A refresh is already in progress.",
+        refreshInProgress,
+      });
+  }
+  refreshInProgress = true;
+
+  runScrapeAndCache().catch((err) => {
+    console.error("Refresh failed:", err);
+    refreshInProgress = false;
+  });
+
+  res.json({
+    message:
+      "Refresh started. Faculty data will be available shortly; scholar data will follow. Poll /api/faculty/status for progress.",
+    refreshInProgress: true,
+  });
+});
+
+// Backwards-compatible GET version of the refresh endpoint
+app.get("/api/faculty/refresh", (req, res) => {
+  if (refreshInProgress) {
+    return res
+      .status(409)
+      .json({
+        message: "A refresh is already in progress.",
+        refreshInProgress,
+      });
+  }
+  refreshInProgress = true;
+
+  runScrapeAndCache().catch((err) => {
+    console.error("Refresh failed:", err);
+    refreshInProgress = false;
+  });
+
+  res.json({
+    message:
+      "Refresh started. Faculty data will be available shortly; scholar data will follow. Poll /api/faculty/status for progress.",
+    refreshInProgress: true,
+  });
+});
+
+// ── Startup ──────────────────────────────────────────────────────────────────
+
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  await initializeData();
+  loadFromCache();
+
+  // If the cache is empty (first run), kick off an initial scrape automatically
+  if (facultyData.length === 0) {
+    console.log("Cache is empty – starting initial scrape...");
+    refreshInProgress = true;
+    runScrapeAndCache().catch((err) => {
+      console.error("Initial scrape failed:", err);
+      refreshInProgress = false;
+    });
+  }
 });
