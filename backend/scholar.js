@@ -268,7 +268,8 @@ export async function fetchScholarPapers(scholarId, startYear) {
           ? `https://scholar.google.com${href}`
           : `https://scholar.google.com/citations?user=${scholarId}`;
 
-        const venue = $(row).find(".gs_gray").last().text().trim() ||
+        const venue =
+          $(row).find(".gs_gray").last().text().trim() ||
           $(row).find(".gsc_a_j .gs_gray").text().trim();
 
         const citedByText = $(row).find(".gsc_a_c a").text().trim();
@@ -310,10 +311,14 @@ async function fetchProfessorPapers(professorName, startYear) {
   // Check for a manual Google Scholar ID override first
   const scholarId = SCHOLAR_ID_OVERRIDES[professorName];
   if (scholarId) {
-    console.log(`  Using Google Scholar override (${scholarId}) for "${professorName}"`);
+    console.log(
+      `  Using Google Scholar override (${scholarId}) for "${professorName}"`,
+    );
     const papers = await fetchScholarPapers(scholarId, startYear);
     if (papers.length > 0) return papers;
-    console.log(`  Scholar override returned 0 papers, falling back to OpenAlex...`);
+    console.log(
+      `  Scholar override returned 0 papers, falling back to OpenAlex...`,
+    );
   }
 
   try {

@@ -28,13 +28,17 @@ async function main() {
   }
 
   const targets = Object.keys(SCHOLAR_ID_OVERRIDES);
-  console.log(`Patching ${targets.length} professors using Google Scholar IDs...\n`);
+  console.log(
+    `Patching ${targets.length} professors using Google Scholar IDs...\n`,
+  );
 
   let patched = 0;
 
   for (const name of targets) {
     const scholarId = SCHOLAR_ID_OVERRIDES[name];
-    console.log(`[${patched + 1}/${targets.length}] ${name}  (Scholar ID: ${scholarId})`);
+    console.log(
+      `[${patched + 1}/${targets.length}] ${name}  (Scholar ID: ${scholarId})`,
+    );
 
     // Verify the professor is actually in facultyData
     const inFaculty = facultyData.some((f) => f.name === name);
