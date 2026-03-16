@@ -8,6 +8,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   async function handleSearch(e) {
     e.preventDefault();
@@ -68,6 +69,38 @@ export default function App() {
         />
       </header>
       <main className="app-main">
+        <button
+          type="button"
+          className="info-button"
+          onClick={() => setShowInfo(true)}
+          aria-label="About this site"
+        >
+          i
+        </button>
+        {showInfo && (
+          <div
+            className="info-overlay"
+            onClick={() => setShowInfo(false)}
+            aria-hidden="true"
+          >
+            <div
+              className="info-box"
+              role="dialog"
+              aria-modal="false"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="info-box-header">
+                <span className="info-box-title">About this tool!</span>
+              </div>
+              <p>
+                This site allows you to explore Purdue ECE faculty by name or
+                research area, including recent publications pulled from Google
+                Scholar and OpenAlex. To get view more information about a
+                faculty member, click the "See more" button.
+              </p>
+            </div>
+          </div>
+        )}
         <h1>Purdue ECE Faculty Directory</h1>
         <p className="subtitle">
           Search and explore faculty members by name or research area
