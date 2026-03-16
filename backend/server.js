@@ -1,5 +1,8 @@
 import express from "express";
 import cors from "cors";
+import { readFileSync } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import {
   searchByName,
   searchByResearchArea,
@@ -11,6 +14,28 @@ import {
   extensiveSearchByResearchArea,
 } from "./scholar.js";
 import { readCache, writeCache } from "./dataStore.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SEE_MORE_OVERRIDES_PATH = path.join(__dirname, "see-more-overrides.json");
+const SEE_MORE_PLACEHOLDER = "https://example.com/REPLACE_WITH_REAL_LINK";
+
+function loadSeeMoreOverrides() {
+  try {
+    return JSON.parse(readFileSync(SEE_MORE_OVERRIDES_PATH, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function applySeeMoreOverrides(results) {
+  const seeMoreOverrides = loadSeeMoreOverrides();
+  return results.map((r) => {
+    const override = seeMoreOverrides[r.name]?.seeMoreUrl;
+    const seeMoreUrl =
+      override && override !== SEE_MORE_PLACEHOLDER ? override : null;
+    return { ...r, seeMoreUrl };
+  });
+}
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -99,7 +124,9 @@ app.get("/api/faculty/search/extensive/name", (req, res) => {
     return res
       .status(503)
       .json({ error: "Scholar data is still loading.", scholarReady: false });
-  const results = extensiveSearchByName(facultyData, scholarData, query);
+  const results = applySeeMoreOverrides(
+    extensiveSearchByName(facultyData, scholarData, query),
+  );
   res.json({ results, count: results.length, scholarReady: true });
 });
 
@@ -111,10 +138,12 @@ app.get("/api/faculty/search/extensive/research", (req, res) => {
     return res
       .status(503)
       .json({ error: "Scholar data is still loading.", scholarReady: false });
-  const results = extensiveSearchByResearchArea(
-    facultyData,
-    scholarData,
-    query,
+  const results = applySeeMoreOverrides(
+    extensiveSearchByResearchArea(
+      facultyData,
+      scholarData,
+      query,
+    ),
   );
   res.json({ results, count: results.length, scholarReady: true });
 });

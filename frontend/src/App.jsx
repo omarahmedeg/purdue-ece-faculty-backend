@@ -15,21 +15,24 @@ export default function App() {
     setHasSearched(true);
     setLoading(true);
     setError(null);
-    const API_BASE =
-      "https://purdue-ece-faculty-directory-git-1059389140575.us-central1.run.app";
+    const API_BASE = "http://localhost:8080";
     try {
       const extensiveEndpoint =
         searchType === "name"
           ? `${API_BASE}/api/faculty/search/extensive/name?query=${encodeURIComponent(
-              query,
+              query
             )}`
           : `${API_BASE}/api/faculty/search/extensive/research?query=${encodeURIComponent(
-              query,
+              query
             )}`;
       const basicEndpoint =
         searchType === "name"
-          ? `${API_BASE}/api/faculty/search/name?query=${encodeURIComponent(query)}`
-          : `${API_BASE}/api/faculty/search/research?query=${encodeURIComponent(query)}`;
+          ? `${API_BASE}/api/faculty/search/name?query=${encodeURIComponent(
+              query
+            )}`
+          : `${API_BASE}/api/faculty/search/research?query=${encodeURIComponent(
+              query
+            )}`;
 
       let res = await fetch(extensiveEndpoint);
       let data = await res.json();
@@ -149,6 +152,16 @@ export default function App() {
                         <div className="no-publications-msg">
                           No publication data available.
                         </div>
+                      )}
+                      {f.seeMoreUrl && (
+                        <a
+                          href={f.seeMoreUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="scholar-link-button"
+                        >
+                          See more
+                        </a>
                       )}
                     </div>
                   </div>

@@ -206,6 +206,22 @@ body {
   color: #8f6b52;
 }
 
+.scholar-link-button {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  background: #cdb79f;
+  color: #000;
+  text-decoration: none;
+}
+
+.scholar-link-button:hover {
+  background: #b8a38a;
+  text-decoration: none;
+}
+
 .no-publications-msg {
   margin-top: 0.25rem;
 }

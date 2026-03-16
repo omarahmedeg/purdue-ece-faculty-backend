@@ -5,7 +5,7 @@ import natural from "natural";
 const BASE_URL = "https://engineering.purdue.edu";
 const FACULTY_LIST_URL = `${BASE_URL}/ECE/People/Faculty`;
 
-async function scrapeFacultyList() {
+export async function scrapeFacultyList() {
   try {
     const response = await fetch(FACULTY_LIST_URL);
     const html = await response.text();
